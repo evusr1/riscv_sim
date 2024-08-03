@@ -44,6 +44,9 @@ def get_type(instruction):
 def func3(instruction):
     return instruction & (0b111 << 11)
 
+def func7(instruction):
+    return instruction & (0b1111111 << 24)
+
 def rd(instruction):
     return instruction & (0b11111 << 6)
 
@@ -53,6 +56,19 @@ def rs1(instruction):
 def rs2(instruction):
     return instruction & (0b11111 << 19)
 
-
 def decode(instruction):
-    pass
+    i_type = get_type(instruction)
+
+    match i_type:
+        case InstructionType.R:
+            pass
+        case InstructionType.I:
+            pass
+        case InstructionType.S:
+            pass
+        case InstructionType.B:
+            pass
+        case InstructionType.J:
+            pass
+        case InstructionType.U:
+            pass
