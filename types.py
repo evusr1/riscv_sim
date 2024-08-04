@@ -70,7 +70,7 @@ class Uint32():
         return self.value != num.value
 
     def __str__(self):
-        return hex(num.value)
+        return hex(self.value)
 
     def toi32(self):
         if not sign(self.value):
