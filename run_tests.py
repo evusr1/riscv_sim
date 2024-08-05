@@ -43,4 +43,25 @@ testram[4] = types.Uint32(0xDEADBEAF)
 print("Validate Ram")
 test("testram[0] == 0x03020100", testram[0].value, 0x03020100)
 print(testram[0:9])
-test("testram[0:9] == [0, 1, 2, 3, 0, 0, 0, 0, 0]", testram[0:9] == bytearray([0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]), True)
+test("testram[0:9] == [0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]", testram[0:9] == bytearray([0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]), True)
+
+import memorymap
+print("create Memory map")
+testmap = memorymap.MemoryMap()
+print("Add ram to devices")
+
+testmap.add_device(testram, 0, 16)
+
+testram2 = ram.Ram(32)
+testmap.add_device(testram2, 32, 64)
+
+print("test access banks")
+test("testmap[4] == types.Uint32(0xDEADBEAF)", testmap[4] == types.Uint32(0xDEADBEAF), True)
+test("testmap[0:9] == [0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]", testmap[0:9] == bytearray([0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]), True)
+print("test different range, bank 2")
+print("set")
+testmap[32:36] = [0xDE, 0xAD, 0xBE, 0xAF]
+test("testmap[32] == 0xAFBEADDE", testmap[32] == types.Uint32(0xAFBEADDE), True)
+testmap[32] = types.Uint32(0xDEADBEAF)
+test("testmap[32] == 0xDEADBEAF", testmap[32] == types.Uint32(0xDEADBEAF), True)
+
