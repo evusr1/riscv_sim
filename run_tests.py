@@ -33,6 +33,7 @@ test("types.Uint32(1) <= types.Uint32(0)", types.Uint32(1) <= types.Uint32(0), F
 test("types.Uint32(1) == types.Uint32(0)", types.Uint32(1) == types.Uint32(0), False)
 test("types.Uint32(1) != types.Uint32(0)", types.Uint32(1) != types.Uint32(0), True)
 
+print("test ram")
 import ram
 print("Create Ram")
 testram = ram.Ram(16)
@@ -45,6 +46,7 @@ test("testram[0] == 0x03020100", testram[0].value, 0x03020100)
 print(testram[0:9])
 test("testram[0:9] == [0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]", testram[0:9] == bytearray([0, 1, 2, 3, 0xAF, 0xBE, 0xAD, 0xDE, 0]), True)
 
+print("test Memory map")
 import memorymap
 print("create Memory map")
 testmap = memorymap.MemoryMap()
@@ -65,3 +67,9 @@ test("testmap[32] == 0xAFBEADDE", testmap[32] == types.Uint32(0xAFBEADDE), True)
 testmap[32] = types.Uint32(0xDEADBEAF)
 test("testmap[32] == 0xDEADBEAF", testmap[32] == types.Uint32(0xDEADBEAF), True)
 
+print("test instructions")
+
+import instruction
+test("load_mask(types.Uint32(0xFFFFFFFF), 8) == 0xFF", instruction.load_mask(types.Uint32(0xFFFFFFFF), 8).value, 0xFF)
+test("load_mask(types.Uint32(0xFFFFFFFF), 8, True) == 0xFFFFFFFF", instruction.load_mask(types.Uint32(0xFFFFFFFF), 8, True).value, 0xFFFFFFFF)
+test("load_mask(types.Uint32(0xFFFFFFFF), 8, True) == 0xFFFFFF7F", instruction.load_mask(types.Uint32(0xFFFFFF7F), 8, True).value, 0x7f)

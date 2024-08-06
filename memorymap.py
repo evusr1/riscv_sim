@@ -31,6 +31,7 @@ class MemoryMap():
                 upper = key.stop - device_range[0]
 
             return slice(lower, upper, key.step)
+
     def __getitem__(self, key):
         if isinstance(key, slice):
             device_range = self.get_device_range(key.start)

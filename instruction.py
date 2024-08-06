@@ -1,5 +1,15 @@
 import register
 import sys
+import types
+
+def load_mask(num, bits, extend = False):
+    negative_mask = 0xFFFFFFFF & (0xFFFFFFFF << bits)
+    mask = ~negative_mask
+
+    if extend and (mask & num.value) & (mask ^ (mask >> 1)):
+        return types.Uint32(mask & num.value | negative_mask)
+
+    return types.Uint32(types.Uint32(mask & num.value))
 
 class Instruction():
     def __init__(self, reg):
@@ -14,7 +24,7 @@ class Instruction():
     def xor(rd, rs1, rs2):
         self.__registers[rd] = self.__registers[rs1] ^ self.__registers[rs2]
 
-    def or_:(rd, rs1, rs2)
+    def or_(rd, rs1, rs2):
         self.__registers[rd] = self.__registers[rs1] | self.__registers[rs2]
 
     def and_(rd, rs1, rs2):
@@ -64,29 +74,30 @@ class Instruction():
         self.__registers[rd] = 1 if self.__registers[rs1] < imm else 0
 
 
-    def lb(rd, imm):
-        pass
+    def lb(memory, rd, rs1, imm):
+         self.__registers[rd] = load_mask(memory[self.__registers[rs1] + imm], 8, True)
 
-    def lh(rd, imm):
-        pass
+    def lh(memory, rd, rs1, imm):
+        self.__registers[rd] = load_mask(memory[self.__registers[rs1] + imm], 16, True)
 
-    def lw(rd, imm):
-        pass
-    def lbu(rd, imm):
-        pass
+    def lw(memory, rd, rs1, imm):
+        self.__registers[rd] = load_mask(memory[self.__registers[rs1] + imm], 32, True)
 
-    def lhu(rd, imm):
-        pass
+    def lbu(memory, rd, rs1, imm):
+        self.__registers[rd] = load_mask(memory[self.__registers[rs1] + imm], 8)
+
+    def lhu(memory, rd, rs1, imm):
+        self.__registers[rd] = load_mask(memory[self.__registers[rs1] + imm], 16)
 
 
     def sb(imm, rs2):
-        pass
+        memory[self.__registers[rs1] + imm] = load_mask(self.__registers[rs2], 8, True)
 
     def sh(imm, rs2):
-        pass
+        memory[self.__registers[rs1] + imm] = load_mask(self.__registers[rs2], 16, True)
 
     def sw(imm, rs2):
-        pass
+        memory[self.__registers[rs1] + imm] = load_mask(self.__registers[rs2], 32, True)
 
 
     def beq(rs1, rs2, imm):
