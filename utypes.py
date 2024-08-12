@@ -5,7 +5,7 @@ def tou32(num):
     if num > 0:
         return 0xFFFFFFFF & num
 
-    return 0xFFFFFFFF & (0xFFFFFFFF - abs(num) + 1)
+    return 0xFFFFFFFF & (~abs(num) + 1)
 
 
 class Uint32():
@@ -76,7 +76,7 @@ class Uint32():
         if not sign(self.value):
             return 0x7FFFFFFF & self.value
 
-        return -(0x7FFFFFFF - (0x7FFFFFFF & self.value) + 1)
+        return -(0xFFFFFFFF & (~self.value + 1))
 
     def arith_rshift(self, shift):
         if not sign(self.value):

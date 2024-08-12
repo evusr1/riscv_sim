@@ -1,4 +1,4 @@
-import types
+import utypes
 
 class Ram:
     def __init__(self, size):
@@ -9,7 +9,7 @@ class Ram:
             return self.__memory[key]
 
         if key < len(self.__memory) - 4:
-            return types.Uint32((self.__memory[key + 3] << 24) | (self.__memory[key + 2] << 16) | (self.__memory[key + 1] << 8) | self.__memory[key])
+            return utypes.Uint32((self.__memory[key + 3] << 24) | (self.__memory[key + 2] << 16) | (self.__memory[key + 1] << 8) | self.__memory[key])
 
         raise IndexError
 

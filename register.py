@@ -34,11 +34,11 @@ T6 = 31
 
 PC = 32
 
-import types
+import utypes
 
 class Registers():
     def __init__(self):
-        self.registers = [types.uint32(0) for i in range(0,33)]
+        self.registers = [utypes.Uint32(0) for i in range(0,33)]
     def __setitem__(self, key, value):
         self.registers[key] = value
     def __getitem__(self, key):
