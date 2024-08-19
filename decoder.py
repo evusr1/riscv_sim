@@ -35,7 +35,15 @@ class Decoder():
         return InstructionTypeOpsDict[opcode.value]
 
     def imm_i_type1(self, instruction_in):
-        return (instruction_in & utypes.Uint32(0b111111111111 << 20)) >> 20
+        imm = (instruction_in & utypes.Uint32(0b111111111111 << 20)) >> 20
+
+        if self.get_func3(instruction_in).value in [0x3]:#zero-extends sltiu
+            return imm
+
+        if (1 << 11) & imm.value:
+            return imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 12))
+
+        return imm
 
     def imm_i_type2(self, instruction_in):
         return (instruction_in & utypes.Uint32(0b11111 << 20)) >> 20
@@ -47,7 +55,7 @@ class Decoder():
 
     def imm_b(self, instruction_in):
         imm1_4 = (instruction_in & utypes.Uint32(0b1111 << 8)) >> 7
-        imm11 = (instruction_in & utypes.Uint32(0b1 << 6)) << 5
+        imm11 = (instruction_in & utypes.Uint32(0b1 << 7)) << 4
         imm10_5 = (instruction_in & utypes.Uint32(0b111111 << 25)) >> 20
         imm12 = (instruction_in & utypes.Uint32(0b1 << 31)) >> 19
 
@@ -64,13 +72,13 @@ class Decoder():
         return instruction_in & utypes.Uint32(0b11111111111111111111 << 12)
 
     def rd(self, instruction_in):
-        return (instruction_in & utypes.Uint32(0b11111 << 7)) >> 7
+        return (instruction_in.value & 0b11111 << 7) >> 7
 
     def rs1(self, instruction_in):
-        return (instruction_in & utypes.Uint32(0b11111 << 15)) >> 15
+        return (instruction_in.value & 0b11111 << 15) >> 15
 
     def rs2(self, instruction_in):
-        return (instruction_in & utypes.Uint32(0b11111 << 20)) >> 20
+        return (instruction_in.value & 0b11111 << 20) >> 20
 
     def get_func3(self, instruction_in):
         if self.get_type(instruction_in) in [InstructionType.J, InstructionType.U, InstructionType.U2]:
@@ -89,8 +97,11 @@ class Decoder():
 
         return utypes.Uint32(0)
 
+    def get_memorymap(self, instruction_in):
+        return self._memorymap
+
     def __init__(self, instructions, memorymap):
-            self.memorymap = memorymap
+            self._memorymap = memorymap
             self._instruction_table = [
                         None,
                         [   #R Type 1
@@ -123,21 +134,23 @@ class Decoder():
                             [[instructions.andi, [self.rd, self.rs1, self.imm_i_type1]]], #7
                         ],
                         [   #I2 Type 3
-                            [[instructions.lb, [self.memorymap, self.rd, self.rs1, self.imm_i_type1]]], #0
-                            [[instructions.lh, [self.memorymap, self.rd, self.rs1, self.imm_i_type1]]], #1
-                            [[instructions.lw, [self.memorymap, self.rd, self.rs1, self.imm_i_type1]]], #2
+                            [[instructions.lb, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #0
+                            [[instructions.lh, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #1
+                            [[instructions.lw, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #2
                             None, #3
-                            [[instructions.lbu, [self.memorymap, self.rd, self.rs1, self.imm_i_type1]]], #4
-                            [[instructions.lhu, [self.memorymap, self.rd, self.rs1, self.imm_i_type1]]], #5
+                            [[instructions.lbu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #4
+                            [[instructions.lhu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #5
                         ],
                         [   #S Type 4
-                            [[instructions.sb, [self.memorymap, self.rs1, self.rs2, self.imm_i_type1]]], #0
-                            [[instructions.sh, [self.memorymap, self.rs1, self.rs2, self.imm_i_type1]]], #1
-                            [[instructions.sw, [self.memorymap, self.rs1, self.rs2, self.imm_i_type1]]], #2
+                            [[instructions.sb, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #0
+                            [[instructions.sh, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #1
+                            [[instructions.sw, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #2
                         ],
                         [   #B Type 5
                             [[instructions.beq, [self.rs1, self.rs2, self.imm_b]]], #0
                             [[instructions.bne, [self.rs1, self.rs2, self.imm_b]]], #1
+                            None,
+                            None,
                             [[instructions.blt, [self.rs1, self.rs2, self.imm_b]]], #4
                             [[instructions.bge, [self.rs1, self.rs2, self.imm_b]]], #5
                             [[instructions.bltu, [self.rs1, self.rs2, self.imm_b]]], #6
@@ -150,7 +163,7 @@ class Decoder():
                             [[instructions.jalr, [self.rd, self.rs1, self.imm_i_type1]]], #0
                         ] ,
                         [   #U Type 8
-                            [[instructions.auipc, [self.rd, self.imm_u]]]
+                            [[instructions.lui, [self.rd, self.imm_u]]]
                         ],
                         [   #U Type 9
                             [[instructions.auipc, [self.rd, self.imm_u]]]
@@ -161,12 +174,15 @@ class Decoder():
                         ]
             ]
     def decode(self, instruction_in):
-        func7 = self.get_func7(instruction_in).value
+        func7 = 1 if self.get_func7(instruction_in).value else 0
+
         func3 = self.get_func3(instruction_in).value
         instruction_type = self.get_type(instruction_in).value
 
+        print(instruction_type, func7, func3)
+
         args_list = self._instruction_table[instruction_type][func3][func7][1]
-        args_list = map(lambda arg: arg(instruction_in).value, args_list)
+        args_list = map(lambda arg: arg(instruction_in), args_list)
         args_list = list(args_list)
 
         command = self._instruction_table[instruction_type][func3][func7][0]
