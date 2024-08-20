@@ -321,7 +321,7 @@ testmap[4] = utypes.Uint32(0)
 
 print("sh x4, 3(x3) (0x004191a3)")
 cpu_execute.execute(utypes.Uint32(0x004191a3))
-test("testmap[4] == utypes.Uint32(0)", testmap[0xFFFF] == utypes.Uint32(0xFFFF), True)
+test("testmap[4] == utypes.Uint32(0xFFFF)", testmap[4] == utypes.Uint32(0xFFFF), True)
 print(reg)
 
 testmap[4] = utypes.Uint32(0xDEADBEAF)
@@ -407,3 +407,4 @@ print("auipc x3, 0x10 (0x00010197)")
 cpu_execute.execute(utypes.Uint32(0x00010197))
 print(reg)
 test("reg[3] == utypes.Uint32(0x54 + (0x10 << 12)", reg[3] == utypes.Uint32(0x54 + (0x10 << 12)), True)
+
