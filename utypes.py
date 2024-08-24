@@ -7,7 +7,6 @@ def tou32(num):
 
     return 0xFFFFFFFF & (~abs(num) + 1)
 
-
 class Uint32():
 
     def __init__(self, value):
@@ -37,9 +36,15 @@ class Uint32():
         return Uint32(ret)
 
     def __rshift__(self, shift):
+        if type(shift) is Uint32:
+            shift = shift.value
+
         return Uint32(self.value >> shift)
 
     def __lshift__(self, shift):
+        if type(shift) is Uint32:
+            shift = shift.value
+
         return Uint32((self.value << shift) & 0xFFFFFFFF)
 
     def __and__(self, num):
@@ -79,6 +84,9 @@ class Uint32():
         return -(0xFFFFFFFF & (~self.value + 1))
 
     def arith_rshift(self, shift):
+        if type(shift) is Uint32:
+            shift = shift.value
+
         if not sign(self.value):
             return Uint32(self.value >> shift)
 

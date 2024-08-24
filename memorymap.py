@@ -12,7 +12,7 @@ class MemoryMap():
             if address >= memory_range[0] and address < memory_range[1]:
                 return memory_range
 
-    def __convert_slice(self, key, device_range):
+    def _convert_slice(self, key, device_range):
             memory_range = device_range[1] - device_range[0]
 
             if abs(key.stop) not in range(device_range[0], device_range[1] + 1):
@@ -35,7 +35,7 @@ class MemoryMap():
     def __getitem__(self, key):
         if isinstance(key, slice):
             device_range = self.get_device_range(key.start)
-            new_slice = self.__convert_slice(key, device_range)
+            new_slice = self._convert_slice(key, device_range)
             return self.__devices[device_range][new_slice]
 
         device_range = self.get_device_range(key)
@@ -44,7 +44,7 @@ class MemoryMap():
     def __setitem__(self, key, data):
         if isinstance(key, slice):
             device_range = self.get_device_range(key.start)
-            new_slice = self.__convert_slice(key, device_range)
+            new_slice = self._convert_slice(key, device_range)
             self.__devices[device_range][new_slice] = data
             return
 

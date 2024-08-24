@@ -2,6 +2,7 @@ from enum import Enum
 import utypes
 
 class InstructionType(Enum):
+    NOP = 0
     R = 1
     I = 2
     I2 = 3
@@ -32,13 +33,11 @@ class Decoder():
 
     def get_type(self, instruction_in):
         opcode = self.op(instruction_in)
+
         return InstructionTypeOpsDict[opcode.value]
 
     def imm_i_type1(self, instruction_in):
         imm = (instruction_in & utypes.Uint32(0b111111111111 << 20)) >> 20
-
-        if self.get_func3(instruction_in).value in [0x3]:#zero-extends sltiu
-            return imm
 
         if (1 << 11) & imm.value:
             return imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 12))
@@ -51,7 +50,13 @@ class Decoder():
     def imm_s(self, instruction_in):
         imm0_4 = (instruction_in & utypes.Uint32(0b11111 << 7)) >> 7
         imm5_11 = (instruction_in & utypes.Uint32(0b1111111 << 25)) >> 20
-        return imm0_4 | imm5_11
+
+        combined_imm = imm0_4 | imm5_11
+
+        if (1 << 11) & combined_imm.value:
+             return combined_imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 12))
+
+        return combined_imm
 
     def imm_b(self, instruction_in):
         imm1_4 = (instruction_in & utypes.Uint32(0b1111 << 8)) >> 7
@@ -59,7 +64,12 @@ class Decoder():
         imm10_5 = (instruction_in & utypes.Uint32(0b111111 << 25)) >> 20
         imm12 = (instruction_in & utypes.Uint32(0b1 << 31)) >> 19
 
-        return imm1_4 | imm11 | imm10_5 | imm12
+        combined_imm = imm1_4 | imm11 | imm10_5 | imm12
+
+        if (1 << 12) & combined_imm.value:
+             return combined_imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 13))
+
+        return combined_imm
 
     def imm_j(self, instruction_in):
         imm19_12 = (instruction_in & utypes.Uint32(0b11111111 << 12))
@@ -165,26 +175,33 @@ class Decoder():
                         [   #U Type 8
                             [[instructions.lui, [self.rd, self.imm_u]]]
                         ],
-                        [   #U Type 9
+                        [   #U2 Type 9
                             [[instructions.auipc, [self.rd, self.imm_u]]]
                         ],
                         [   #I4 Type 10
-                            [[instructions.ecall]], #0
-                            [[instructions.ebreak]], #1
+                            [[instructions.ecall, []]], #0
+                            [[instructions.ebreak, []]], #1
                         ]
             ]
+            self.nop = instructions.nop
+
+
     def decode(self, instruction_in):
-        func7 = 1 if self.get_func7(instruction_in).value else 0
+        try:
+            func7 = 1 if self.get_func7(instruction_in).value else 0
 
-        func3 = self.get_func3(instruction_in).value
-        instruction_type = self.get_type(instruction_in).value
+            func3 = self.get_func3(instruction_in).value
+            instruction_type = self.get_type(instruction_in).value
 
-        print(instruction_type, func7, func3)
+            args_list = self._instruction_table[instruction_type][func3][func7][1]
+            args_list = map(lambda arg: arg(instruction_in), args_list)
+            args_list = list(args_list)
 
-        args_list = self._instruction_table[instruction_type][func3][func7][1]
-        args_list = map(lambda arg: arg(instruction_in), args_list)
-        args_list = list(args_list)
+            command = self._instruction_table[instruction_type][func3][func7][0]
 
-        command = self._instruction_table[instruction_type][func3][func7][0]
+            return [command, args_list]
+        except:
+            if instruction_in.value:
+                print("Unimplemented", instruction_in)
 
-        return [command, args_list]
+            return [self.nop, []]

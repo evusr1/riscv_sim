@@ -38,9 +38,10 @@ import utypes
 
 class Registers():
     def __init__(self):
-        self._registers = [utypes.Uint32(0) for i in range(0,33)]
+        self.reset()
     def __setitem__(self, key, value):
-        self._registers[key] = value
+        if not key == 0:
+            self._registers[key] = value
     def __getitem__(self, key):
         return self._registers[key]
     def __delitem__(self, key):
@@ -50,4 +51,5 @@ class Registers():
         for i in range(len(self._registers)):
             register_text += f"x{i}: {self._registers[i]}\n"
         return register_text
-
+    def reset(self):
+        self._registers = [utypes.Uint32(0) for i in range(0,33)]
