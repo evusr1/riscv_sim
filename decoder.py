@@ -29,7 +29,7 @@ InstructionTypeOpsDict = dict(
 
 class Decoder():
     def op(self, instruction_in):
-        return instruction_in & utypes.Uint32(0b1111111)
+        return instruction_in[0:7]
 
     def get_type(self, instruction_in):
         opcode = self.op(instruction_in)
@@ -37,7 +37,8 @@ class Decoder():
         return InstructionTypeOpsDict[opcode.value]
 
     def imm_i_type1(self, instruction_in):
-        imm = (instruction_in & utypes.Uint32(0b111111111111 << 20)) >> 20
+        imm = instruction_in[20:32]
+        print(imm)
 
         if (1 << 11) & imm.value:
             return imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 12))
@@ -45,28 +46,28 @@ class Decoder():
         return imm
 
     def imm_i_type2(self, instruction_in):
-        return (instruction_in & utypes.Uint32(0b11111 << 20)) >> 20
+        return self.imm_i_type1(instruction_in)[0:5]
 
     def imm_s(self, instruction_in):
-        imm0_4 = (instruction_in & utypes.Uint32(0b11111 << 7)) >> 7
-        imm5_11 = (instruction_in & utypes.Uint32(0b1111111 << 25)) >> 20
+        imm0_4 = instruction_in[7:12]
+        imm5_11 = instruction_in[25:32] << 5
 
         combined_imm = imm0_4 | imm5_11
 
-        if (1 << 11) & combined_imm.value:
+        if combined_imm[11:12].value:
              return combined_imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 12))
 
         return combined_imm
 
     def imm_b(self, instruction_in):
-        imm1_4 = (instruction_in & utypes.Uint32(0b1111 << 8)) >> 7
-        imm11 = (instruction_in & utypes.Uint32(0b1 << 7)) << 4
-        imm10_5 = (instruction_in & utypes.Uint32(0b111111 << 25)) >> 20
-        imm12 = (instruction_in & utypes.Uint32(0b1 << 31)) >> 19
+        imm1_4 = instruction_in[8:12] << 1
+        imm11 = instruction_in[7:8] << 11
+        imm10_5 = instruction_in[25:31] << 5
+        imm12 = instruction_in[31:32] << 12
 
         combined_imm = imm1_4 | imm11 | imm10_5 | imm12
 
-        if (1 << 12) & combined_imm.value:
+        if combined_imm[12:13].value:
              return combined_imm | utypes.Uint32(0xFFFFFFFF & (0xFFFFFFFF << 13))
 
         return combined_imm
@@ -82,18 +83,18 @@ class Decoder():
         return instruction_in & utypes.Uint32(0b11111111111111111111 << 12)
 
     def rd(self, instruction_in):
-        return (instruction_in.value & 0b11111 << 7) >> 7
+        return instruction_in[7:12].value
 
     def rs1(self, instruction_in):
-        return (instruction_in.value & 0b11111 << 15) >> 15
+        return instruction_in[15:20].value
 
     def rs2(self, instruction_in):
-        return (instruction_in.value & 0b11111 << 20) >> 20
+        return instruction_in[20:25].value
 
     def get_func3(self, instruction_in):
         if self.get_type(instruction_in) in [InstructionType.J, InstructionType.U, InstructionType.U2]:
             return utypes.Uint32(0)
-        return (instruction_in & utypes.Uint32(0b111 << 12)) >> 12
+        return instruction_in[12:15]
 
     def get_func7(self, instruction_in):
         instruction_type =  self.get_type(instruction_in)
@@ -103,7 +104,7 @@ class Decoder():
                 return self.imm_i_type1(instruction_in)
 
             if not instruction_type == InstructionType.I or self.get_func3(instruction_in).value in [0x1, 0x5]:
-                return (instruction_in & utypes.Uint32(0b1111111 << 25)) >> 25
+                return self.imm_i_type1(instruction_in)[5:11]
 
         return utypes.Uint32(0)
 

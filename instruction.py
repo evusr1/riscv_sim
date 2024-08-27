@@ -17,7 +17,6 @@ def generate_negative_mask(bits):
 def keep_number_bits(num, bits, extend = False):
     negative_mask = generate_negative_mask(bits)
     mask = ~negative_mask
-
     if extend and (mask & num.value) & (mask ^ (mask >> 1)):
         return utypes.Uint32(mask & num.value | negative_mask)
 

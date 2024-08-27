@@ -77,6 +77,14 @@ class Uint32():
     def __str__(self):
         return hex(self.value)
 
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            start, stop, step = key.indices(32)
+
+            bits = stop - start
+            mask = ~(-0x1 << bits)
+            return Uint32(self.value & (mask << start)) >> start
+
     def toi32(self):
         if not sign(self.value):
             return 0x7FFFFFFF & self.value
