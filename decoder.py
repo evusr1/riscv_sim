@@ -113,77 +113,97 @@ class Decoder():
 
     def __init__(self, instructions, memorymap):
             self._memorymap = memorymap
-            self._instruction_table = [
-                        None,
-                        [   #R Type 1
-                            [
-                                [instructions.add, [self.rd, self.rs1, self.rs2]],
-                                [instructions.sub, [self.rd, self.rs1, self.rs2]]
-                            ], #0: 0, 0x20
-                            [[instructions.sll, [self.rd, self.rs1, self.rs2]]], #1
-                            [[instructions.slt, [self.rd, self.rs1, self.rs2]]], #2
-                            [[instructions.sltu, [self.rd, self.rs1, self.rs2]]], #3
-                            [[instructions.xor, [self.rd, self.rs1, self.rs2]]], #4
-                            [
-                                [instructions.srl, [self.rd, self.rs1, self.rs2]],
-                                [instructions.sra, [self.rd, self.rs1, self.rs2]]
-                            ], #5: 0, 0x20
-                            [[instructions.or_, [self.rd, self.rs1, self.rs2]]], #6
-                            [[instructions.and_, [self.rd, self.rs1, self.rs2]]] #7
-                        ],
-                        [   #I Type 2
-                            [[instructions.addi, [self.rd, self.rs1, self.imm_i_type1]]], #0
-                            [[instructions.slli, [self.rd, self.rs1, self.imm_i_type2]]], #1
-                            [[instructions.slti, [self.rd, self.rs1, self.imm_i_type1]]], #2
-                            [[instructions.sltiu, [self.rd, self.rs1, self.imm_i_type1]]], #3
-                            [[instructions.xori, [self.rd, self.rs1, self.imm_i_type1]]], #4
-                            [
-                                [instructions.srli, [self.rd, self.rs1, self.imm_i_type2]],
-                                [instructions.srai, [self.rd, self.rs1, self.imm_i_type2]]
-                            ], #5: 0, 0x20
-                            [[instructions.ori, [self.rd, self.rs1, self.imm_i_type1]]], #6
-                            [[instructions.andi, [self.rd, self.rs1, self.imm_i_type1]]], #7
-                        ],
-                        [   #I2 Type 3
-                            [[instructions.lb, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #0
-                            [[instructions.lh, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #1
-                            [[instructions.lw, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #2
-                            None, #3
-                            [[instructions.lbu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #4
-                            [[instructions.lhu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #5
-                        ],
-                        [   #S Type 4
-                            [[instructions.sb, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #0
-                            [[instructions.sh, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #1
-                            [[instructions.sw, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #2
-                        ],
-                        [   #B Type 5
-                            [[instructions.beq, [self.rs1, self.rs2, self.imm_b]]], #0
-                            [[instructions.bne, [self.rs1, self.rs2, self.imm_b]]], #1
-                            None,
-                            None,
-                            [[instructions.blt, [self.rs1, self.rs2, self.imm_b]]], #4
-                            [[instructions.bge, [self.rs1, self.rs2, self.imm_b]]], #5
-                            [[instructions.bltu, [self.rs1, self.rs2, self.imm_b]]], #6
-                            [[instructions.bgeu, [self.rs1, self.rs2, self.imm_b]]], #7
-                        ],
-                        [   #J Type 6
-                            [[instructions.jal, [self.rd, self.imm_j]]], #0
-                        ],
-                        [   #I3 Type 7
-                            [[instructions.jalr, [self.rd, self.rs1, self.imm_i_type1]]], #0
-                        ] ,
-                        [   #U Type 8
-                            [[instructions.lui, [self.rd, self.imm_u]]]
-                        ],
-                        [   #U2 Type 9
-                            [[instructions.auipc, [self.rd, self.imm_u]]]
-                        ],
-                        [   #I4 Type 10
-                            [[instructions.ecall, []]], #0
-                            [[instructions.ebreak, []]], #1
-                        ]
-            ]
+            instruction_R_table =   [
+                                        [
+                                            [instructions.add, [self.rd, self.rs1, self.rs2]],
+                                            [instructions.sub, [self.rd, self.rs1, self.rs2]]
+                                        ], #0: 0, 0x20
+                                        [[instructions.sll, [self.rd, self.rs1, self.rs2]]], #1
+                                        [[instructions.slt, [self.rd, self.rs1, self.rs2]]], #2
+                                        [[instructions.sltu, [self.rd, self.rs1, self.rs2]]], #3
+                                        [[instructions.xor, [self.rd, self.rs1, self.rs2]]], #4
+                                        [
+                                            [instructions.srl, [self.rd, self.rs1, self.rs2]],
+                                            [instructions.sra, [self.rd, self.rs1, self.rs2]]
+                                        ], #5: 0, 0x20
+                                        [[instructions.or_, [self.rd, self.rs1, self.rs2]]], #6
+                                        [[instructions.and_, [self.rd, self.rs1, self.rs2]]] #7
+                                    ]
+
+            instruction_I_table =   [   #I Type 2
+                                        [[instructions.addi, [self.rd, self.rs1, self.imm_i_type1]]], #0
+                                        [[instructions.slli, [self.rd, self.rs1, self.imm_i_type2]]], #1
+                                        [[instructions.slti, [self.rd, self.rs1, self.imm_i_type1]]], #2
+                                        [[instructions.sltiu, [self.rd, self.rs1, self.imm_i_type1]]], #3
+                                        [[instructions.xori, [self.rd, self.rs1, self.imm_i_type1]]], #4
+                                        [
+                                            [instructions.srli, [self.rd, self.rs1, self.imm_i_type2]],
+                                            [instructions.srai, [self.rd, self.rs1, self.imm_i_type2]]
+                                        ], #5: 0, 0x20
+                                        [[instructions.ori, [self.rd, self.rs1, self.imm_i_type1]]], #6
+                                        [[instructions.andi, [self.rd, self.rs1, self.imm_i_type1]]], #7
+                                    ]
+
+            instruction_I2_table =  [   #I2 Type 3
+                                        [[instructions.lb, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #0
+                                        [[instructions.lh, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #1
+                                        [[instructions.lw, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #2
+                                        None, #3
+                                        [[instructions.lbu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #4
+                                        [[instructions.lhu, [self.get_memorymap, self.rd, self.rs1, self.imm_i_type1]]], #5
+                                    ]
+
+            instruction_S_table =   [   #S Type 4
+                                        [[instructions.sb, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #0
+                                        [[instructions.sh, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #1
+                                        [[instructions.sw, [self.get_memorymap, self.rs1, self.rs2, self.imm_s]]], #2
+                                    ]
+
+            instruction_B_table =   [   #B Type 5
+                                        [[instructions.beq, [self.rs1, self.rs2, self.imm_b]]], #0
+                                        [[instructions.bne, [self.rs1, self.rs2, self.imm_b]]], #1
+                                        None,
+                                        None,
+                                        [[instructions.blt, [self.rs1, self.rs2, self.imm_b]]], #4
+                                        [[instructions.bge, [self.rs1, self.rs2, self.imm_b]]], #5
+                                        [[instructions.bltu, [self.rs1, self.rs2, self.imm_b]]], #6
+                                        [[instructions.bgeu, [self.rs1, self.rs2, self.imm_b]]], #7
+                                    ]
+
+            instruction_J_table =   [   #J Type 6
+                                        [[instructions.jal, [self.rd, self.imm_j]]], #0
+                                    ]
+
+            instruction_I3_table =  [   #I3 Type 7
+                                        [[instructions.jalr, [self.rd, self.rs1, self.imm_i_type1]]], #0
+                                    ]
+
+            instruction_U_table =   [   #U Type 8
+                                        [[instructions.lui, [self.rd, self.imm_u]]]
+                                    ]
+
+            instruction_U2_table =  [   #U2 Type 9
+                                        [[instructions.auipc, [self.rd, self.imm_u]]]
+                                    ]
+
+            instruction_I4_table =  [   #I4 Type 10
+                                        [[instructions.ecall, []]], #0
+                                        [[instructions.ebreak, []]], #1
+                                    ]
+
+            self._instruction_table = dict(
+                        [(InstructionType.R, instruction_R_table),
+                        (InstructionType.I, instruction_I_table),
+                        (InstructionType.I2, instruction_I2_table),
+                        (InstructionType.S, instruction_S_table),
+                        (InstructionType.B, instruction_B_table),
+                        (InstructionType.J, instruction_J_table),
+                        (InstructionType.I3, instruction_I3_table),
+                        (InstructionType.U, instruction_U_table),
+                        (InstructionType.U2, instruction_U2_table),
+                        (InstructionType.I4, instruction_I4_table)]
+            )
+
             self.nop = instructions.nop
 
 
@@ -192,9 +212,12 @@ class Decoder():
             func7 = 1 if self.get_func7(instruction_in).value else 0
 
             func3 = self.get_func3(instruction_in).value
-            instruction_type = self.get_type(instruction_in).value
+            instruction_type = InstructionType(self.get_type(instruction_in).value)
+
 
             args_list = self._instruction_table[instruction_type][func3][func7][1]
+
+
             args_list = map(lambda arg: arg(instruction_in), args_list)
             args_list = list(args_list)
 
